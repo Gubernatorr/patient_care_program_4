@@ -84,8 +84,8 @@ public class Add_Patient_Page_Controller {
 
         Database_Dispatcher dbDispatcher = new Database_Dispatcher();
 
-        if(add_patient_first_name.getText() != null && add_patient_last_name.getText() != null && add_patient_dob.getText() != null &&
-                add_patient_gender.getText() != null && add_patient_phone_number.getText() != null &&  add_patient_address.getText() != null){
+        if(!add_patient_first_name.getText().isEmpty() && !add_patient_last_name.getText().isEmpty() && !add_patient_dob.getText().isEmpty() &&
+                !add_patient_gender.getText().isEmpty() && !add_patient_phone_number.getText().isEmpty() && !add_patient_address.getText().isEmpty()){
 
             String firstName = add_patient_first_name.getText();
             String lastName = add_patient_last_name.getText();

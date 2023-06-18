@@ -27,6 +27,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -111,6 +112,46 @@ public class Main_Page_Controller {
     private TextArea medical_records_field;
 
     @FXML
+    private Button delete_patient_from_db_button;
+
+    @FXML
+    void delete_patient_from_db_button_pressed(ActionEvent event) throws SQLException, ClassNotFoundException {
+        String index = table_of_patients.getItems().get(table_of_patients.getSelectionModel().getSelectedIndex()).getIdpatient();
+
+        Patient selectedPatient = getPatientById(index);
+        deletePatientFromDB(selectedPatient);
+        active_patient = getFirstPatientFromDB();
+
+        text_id.setText(active_patient.getIdpatient());
+        text_name.setText(active_patient.getFirstName());
+        text_last_name.setText(active_patient.getLastName());
+        text_dob.setText(active_patient.getDob());
+        text_id.setText(active_patient.getIdpatient());
+        text_gender.setText(active_patient.getGender());
+        text_phone.setText(active_patient.getPhoneNumber());
+        text_address.setText(active_patient.getAddress());
+        medical_records_field.setText(active_patient.getMedical_records());
+
+        generateTableOfPatients();
+    }
+
+    public void deletePatientFromDB(Patient patient){
+        Database_Dispatcher dbDispatcher = new Database_Dispatcher();
+
+        String delete = "DELETE FROM " + Const.PATIENT_TABLE + " WHERE " + Const.PATIENT_ID + " =?";
+
+        try {
+            PreparedStatement prSt = dbDispatcher.getDbConnection().prepareStatement(delete);
+            prSt.setString(1, patient.getIdpatient());
+
+            prSt.executeUpdate();
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @FXML
     void add_patient_button_pressed(ActionEvent event) {
         add_Patient_Button.getScene().getWindow().hide();
 
@@ -136,6 +177,10 @@ public class Main_Page_Controller {
 
     @FXML
     void searchButtonPressed(ActionEvent event) throws SQLException, ClassNotFoundException {
+        do_search();
+    }
+
+    public void  do_search() throws SQLException, ClassNotFoundException {
         table_of_patients.getItems().clear();
         initData();
 
@@ -151,7 +196,6 @@ public class Main_Page_Controller {
         coppy.getItems().addAll(copy);
 
         table_of_patients = coppy;
-
     }
 
     private List<Patient> searchList(String searchingWords, List<Patient> patientList){
@@ -264,8 +308,8 @@ public class Main_Page_Controller {
         closeButton.setOnAction(event -> window.close());
 
         saveButton.setOnAction(event -> {
-            if(firstNameField.getText() != null && lastNameField.getText() != null && dobField.getText() != null &&
-                    genderField.getText() != null && phoneNumberField.getText() != null &&  addressField.getText() != null){
+            if(!firstNameField.getText().isEmpty() && !lastNameField.getText().isEmpty() && !dobField.getText().isEmpty() &&
+                    !genderField.getText().isEmpty() && !phoneNumberField.getText().isEmpty() && !addressField.getText().isEmpty()){
 
                 String firstName = firstNameField.getText();
                 String lastName = lastNameField.getText();
@@ -475,6 +519,18 @@ public class Main_Page_Controller {
             if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2) {
                 try {
                     show_selected_patient_info();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                } catch (ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+        searchField.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                try {
+                    do_search();
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 } catch (ClassNotFoundException e) {
