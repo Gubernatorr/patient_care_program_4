@@ -7,8 +7,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import com.example.patient_care_program_4.animations.Shake;
 import com.example.patient_care_program_4.configs.Const;
@@ -49,7 +51,7 @@ public class Main_Page_Controller {
     private Button add_Patient_Button;
 
     @FXML
-    private ChoiceBox<?> choiseBox;
+    private ChoiceBox<String> choiseBox;
 
     @FXML
     private Button delete_patient_from_db;
@@ -133,13 +135,53 @@ public class Main_Page_Controller {
     }
 
     @FXML
-    void searchButtonPressed(ActionEvent event) {
+    void searchButtonPressed(ActionEvent event) throws SQLException, ClassNotFoundException {
+        table_of_patients.getItems().clear();
+        initData();
 
+        table_column_id.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getIdpatient()));
+        table_column_name.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getFirstName()));
+        table_column_last_name.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getLastName()));
+        table_column_phone_number.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getPhoneNumber()));
+
+        List<Patient> copy = new ArrayList<>();
+        TableView<Patient> coppy = table_of_patients;
+        copy.addAll(searchList(searchField.getText(), patientsData));
+        coppy.getItems().clear();
+        coppy.getItems().addAll(copy);
+
+        table_of_patients = coppy;
+
+    }
+
+    private List<Patient> searchList(String searchingWords, List<Patient> patientList){
+        List<String> searchWordsArray = Arrays.asList(searchingWords.trim().split(" "));
+
+        switch (choiseBox.getValue()){
+            case "Sort by Id" : patientList = patientList.stream().filter(input -> searchWordsArray.stream().allMatch(word
+                    -> input.getIdpatient().toLowerCase().contains(word.toLowerCase()))).collect(Collectors.toList());break;
+            case "Sort by First Name" : patientList = patientList.stream().filter(input -> searchWordsArray.stream().allMatch(word
+                    -> input.getFirstName().toLowerCase().contains(word.toLowerCase()))).collect(Collectors.toList()); break;
+            case "Sort by Last Name" : patientList = patientList.stream().filter(input -> searchWordsArray.stream().allMatch(word
+                    -> input.getLastName().toLowerCase().contains(word.toLowerCase()))).collect(Collectors.toList()); break;
+            case "Sort by Login" : patientList = patientList.stream().filter(input -> searchWordsArray.stream().allMatch(word
+                    -> input.getPhoneNumber().toLowerCase().contains(word.toLowerCase()))).collect(Collectors.toList()); break;
+            default: System.out.println("WRONG SWITCH CASE");
+        }
+        return patientList;
     }
 
     @FXML
     void show_info_button_pressed(ActionEvent event) throws SQLException, ClassNotFoundException {
-        show_selected_patient_info();
+
+        if(!table_of_patients.getSelectionModel().isEmpty()){
+            show_selected_patient_info();
+        }
+
+    }
+
+    public void getStringsForChoiseBox(ActionEvent event){
+        String myChoiseBoxStrings = choiseBox.getValue();
     }
 
     public void show_selected_patient_info() throws SQLException, ClassNotFoundException {
@@ -440,6 +482,11 @@ public class Main_Page_Controller {
                 }
             }
         });
+
+        String[] choiseBoxStrings = {"Sort by Id", "Sort by First Name", "Sort by Last Name", "Sort by Phone"};
+        choiseBox.getItems().addAll(choiseBoxStrings);
+        choiseBox.setValue(choiseBoxStrings[0]);
+        choiseBox.setOnAction(this::getStringsForChoiseBox);
 
     }
 
